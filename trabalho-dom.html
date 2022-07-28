@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Trabalho 2 - Diogo Rocco</title>
+
+        <style type="text/css">
+            .circle {
+                width: 130px;
+                height: 130px;
+                border-radius: 50%;
+                float: left;
+                margin-right: 50px;
+            }
+            .red-circle {
+                background-color: red;
+                width: 130px;
+                height: 130px;
+                border-radius: 50%;
+                float: left;
+                margin-right: 50px;
+            }
+            .blue-circle {
+                background-color: blue;
+                width: 130px;
+                height: 130px;
+                border-radius: 50%;
+                float: left;
+                margin-right: 50px;
+            }
+            .yellow-circle {
+                background-color: yellow;
+                width: 130px;
+                height: 130px;
+                border-radius: 50%;
+                float: left;
+                margin-right: 50px;
+            }
+        </style>
+    </head>
+
+    <body>
+    </body>
+
+    <script type="text/javascript">
+        let CircleCount = 1;
+
+        let redCircleButton = document.createElement("button");
+        redCircleButton.setAttribute("id", "red-circle-button")
+        let redCircleButtonText = document.createTextNode("Adicionar Circulo Vermelho");
+        redCircleButton.appendChild(redCircleButtonText)
+        //document.body.appendChild(redCircleButton)
+
+        let blueCircleButton = document.createElement("button");
+        blueCircleButton.setAttribute("id", "blue-circle-button")
+        let blueCircleButtonText = document.createTextNode("Adicionar Circulo Azul");
+        blueCircleButton.appendChild(blueCircleButtonText)
+        //document.body.appendChild(blueCircleButton)
+
+        let yellowCircleButton = document.createElement("button");
+        yellowCircleButton.setAttribute("id", "yellow-circle-button")
+        let yellowCircleButtonText = document.createTextNode("Adicionar Circulo Amarelo");
+        yellowCircleButton.appendChild(yellowCircleButtonText)
+        //document.body.appendChild(yellowCircleButton)
+
+        let divSuperior = document.createElement("div");
+        divSuperior.appendChild(redCircleButton);
+        divSuperior.appendChild(blueCircleButton);
+        divSuperior.appendChild(yellowCircleButton);
+        document.body.appendChild(divSuperior)
+
+        function addCircle(color) {
+            let newCircle = document.createElement("div")
+            newCircle.setAttribute("id", `${color}-circle-${CircleCount}`)
+            newCircle.setAttribute("class", `${color}-circle`)
+
+            document.body.appendChild(newCircle)
+            
+            let circleId = `${color}-circle-${CircleCount}`
+            document.getElementById(circleId).onclick = function () {
+                document.getElementById(circleId).style.display = "none";
+            };
+
+            CircleCount += 1;
+        }
+
+        function addBlueCircle() {
+            document.body.appendChild(blue_circle)
+        }
+
+        function addYellowCircle() {
+            document.body.appendChild(yellow_circle)
+        }
+
+        addCircle("red")
+        addCircle("blue")
+        addCircle("yellow")
+
+        document.getElementById("red-circle-button").onclick = function () { debugger; addCircle("red") }
+        document.getElementById("blue-circle-button").onclick = function () { debugger; addCircle("blue") }
+        document.getElementById("yellow-circle-button").onclick = function () { debugger; addCircle("yellow") }
+
+    </script>
+</html>

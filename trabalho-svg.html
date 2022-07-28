@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+        <title>Trabalho 3 - Diogo Rocco</title>
+
+        <style type="text/css">
+            .circle {
+                width: 130px;
+                height: 130px;
+                border-radius: 50%;
+                float: left;
+                margin-right: 50px;
+            }
+            .red-circle {
+                background-color: red;
+                width: 130px;
+                height: 130px;
+                border-radius: 50%;
+                float: left;
+                margin-right: 50px;
+            }
+            .blue-circle {
+                background-color: blue;
+                width: 130px;
+                height: 130px;
+                border-radius: 50%;
+                float: left;
+                margin-right: 50px;
+            }
+            .yellow-circle {
+                background-color: yellow;
+                width: 130px;
+                height: 130px;
+                border-radius: 50%;
+                float: left;
+                margin-right: 50px;
+            }
+
+            .row {
+                display: flex;
+                margin-top: 5px;
+                margin-bottom: 5px;
+            }
+
+            .fullSize {
+                height: 100%;
+                width: 100%;
+                margin-top: 100px;
+                left: 0;
+                top: 0;
+                overflow: hidden;
+                position: fixed;
+            }
+
+        </style>
+    </head>
+
+    <body>
+        <div class="row">
+            Ratio
+            <input
+            id="ratioInput"
+            type="range"   
+            min="0"
+            value="0.5"
+                    max="1"
+                    step="0.01"
+                    oninput="changeRatioInput(this.value)"
+                />
+                <div id="ratioValue"></div>
+            </div>
+            
+            <div class="row">
+                N
+                <input
+                id="NInput"
+                type="range"   
+                min="0"
+                value="2"
+                max="30"
+                step="1"
+                oninput="changeNInput(this.value)"
+                />
+                <div id="NValue"></div>
+            </div>
+            
+            <div class="row">
+                Variation
+                <input type="radio" id="variation_0" name="variation" checked="true" value="0">
+                <input type="radio" id="variation_1" name="variation" value="1">
+                <input type="radio" id="variation_2" name="variation" value="2">
+                <input type="radio" id="variation_3" name="variation" value="3">
+                <div id="variationValue"></div>
+            </div>
+            
+            <div id="viewPort" class="fullSize">
+                <svg id="desenho" width=800 height=600 style="border:1px solid gray"></svg>
+            </div>
+
+    </body>
+
+    <script type="text/javascript">
+    
+        function changeRatioInput(value){
+            ratioValue.innerHTML = value
+            ratio = value
+            localstorage.setItem("ratio", value)
+            desenhar()
+        }
+
+        function changeNInput(value) {
+            NValue.innerHTML = value
+            N = value
+            localstorage.setItem("N", value)
+            desenhar()
+        }
+        
+        let localstorage = window.localStorage;
+
+        let ratio = localstorage.getItem("ratio")? localstorage.getItem("ratio") : 0.5
+        let ratioValue = document.getElementById("ratioValue")
+        ratioValue.innerHTML = ratio
+
+        let N = localstorage.getItem("N")? localstorage.getItem("N") : 2
+        let NValue = document.getElementById("NValue")
+        NValue.innerHTML = N
+
+        let variation = localstorage.getItem("variation")? Number(localstorage.getItem("variation")) : 0;
+        $('#variationValue').html(variation)
+        $('input:radio[name=variation]').change(() => {
+            variation = $('input:radio[name=variation]:checked').val();
+            $('#variationValue').html(variation)
+            localstorage.setItem("variation", variation)
+            desenhar()
+        })
+
+        function testeLocalStorage(){
+            let localstorage = window.localStorage;
+            localstorage.setItem("batata", "frita")
+            console.log(localstorage.getItem("batata"))
+            console.log(localstorage.getItem("teste"))
+        }
+
+        desenho = document.getElementById("desenho")
+
+        $("#viewPort #desenho").draggable({
+                containment: "#viewPort",
+            });
+        //dragAndSave("#canvasDesenho");
+
+        //logica dos quadrados
+        function desenhar(){
+            const [ width, height ] = [800,600];
+            desenho.innerHTML=""; // Limpar o desenho
+            const cores = ["red", "yellow", "blue", "green"];
+                
+            function getInitState() {
+                return width/10
+            }
+    
+            function getFatorMult(ratio) {
+                return 4*(1 - Math.sqrt(2))*(Math.pow(ratio, 2) - ratio) + 1 
+            }
+    
+            function reflectSquareMiddle(point_1, point_2) {
+                let distanceMiddle1 = width/2 - point_1[0]
+                let distanceMiddle2 = width/2 - point_2[0]
+    
+                return [[point_1[0]+distanceMiddle1*2, point_1[1]], [point_2[0]+distanceMiddle2*2, point_2[1]]]
+            }
+    
+            function reflectSquareOnAxis(point_1, point_2, axis) {
+                let diffVector = [point_2[0]-point_1[0], point_2[1]-point_1[1]]
+    
+                let normAxis = Math.sqrt(Math.pow(axis[0], 2) + Math.pow(axis[1], 2))
+                let normalizedAxis = [axis[0]/normAxis, axis[1]/normAxis]
+    
+                let projectedNorm = normalizedAxis[0]*diffVector[0] + normalizedAxis[1]*diffVector[1]
+                let projectedVector = [normalizedAxis[0]*projectedNorm, normalizedAxis[1]*projectedNorm]
+                let perpTranslation = [diffVector[0]-projectedVector[0], diffVector[1]-projectedVector[1]]
+                let reflectedDiffVector = [diffVector[0]-2*perpTranslation[0], diffVector[1]-2*perpTranslation[1]]
+                
+                return [point_1, [point_1[0]+reflectedDiffVector[0], point_1[1]+reflectedDiffVector[1]]]
+            }
+    
+            function getSquareSvg(point_1, point_2, color, counterClockWise) {
+                let diffVector = [point_2[0]-point_1[0], point_2[1]-point_1[1]]
+                let perpDiffVector = [-diffVector[1], diffVector[0]]
+                if (counterClockWise) {
+                perpDiffVector = [-perpDiffVector[0], -perpDiffVector[1]]
+                }
+    
+                let point_3 = [point_2[0]+perpDiffVector[0], point_2[1]+perpDiffVector[1]]
+                let point_4 = [point_1[0]+perpDiffVector[0], point_1[1]+perpDiffVector[1]]
+    
+                //let sq = svg `<polygon fill=${color} points="${point_1[0]},${point_1[1]} ${point_2[0]},${point_2[1]} ${point_3[0]},${point_3[1]} ${point_4[0]},${point_4[1]}" opacity=0.7 />`;
+                //let sq = `<polygon fill=${color} points="${point_1[0]},${point_1[1]} ${point_2[0]},${point_2[1]} ${point_3[0]},${point_3[1]} ${point_4[0]},${point_4[1]}" opacity=0.7 />`;
+                let sq = document.createElement("polygon")
+                sq.setAttribute("fill",`${color}`)
+                sq.setAttribute("points", `${point_1[0]},${point_1[1]} ${point_2[0]},${point_2[1]} ${point_3[0]},${point_3[1]} ${point_4[0]},${point_4[1]}`)
+                sq.setAttribute("opacity","0.7")
+                return sq
+            }
+    
+            function iterate(currentPoint1, currentPoint2, ratio, variation) {
+                let currentDiffVec = [currentPoint2[0]-currentPoint1[0], currentPoint2[1]-currentPoint1[1]]
+                let currentPerpDiffVec = [-currentDiffVec[1], currentDiffVec[0]]
+                let currentSize = Math.sqrt(Math.pow(currentDiffVec[0],2) + Math.pow(currentDiffVec[1],2))
+    
+                // Translation
+                let translationVector = [0,0] 
+                
+                if (variation == 3 || variation == 2) {
+                translationVector = [translationVector[0]+currentPerpDiffVec[0], translationVector[1]+currentPerpDiffVec[1]]    
+                }
+                
+                let newPoint1 = [currentPoint1[0]+translationVector[0], currentPoint1[1]+translationVector[1]]
+                let newPoint2 = [currentPoint2[0]+translationVector[0], currentPoint2[1]+translationVector[1]]
+                let newSize = currentSize*getFatorMult(ratio)
+    
+                let tilt = Math.sqrt(Math.pow(newSize, 2)-Math.pow(currentSize,2))
+    
+                if (ratio == 0.5) {
+                newPoint1 = newPoint1
+                newPoint2 = [newPoint2[0]+currentPerpDiffVec[0], newPoint2[1]+currentPerpDiffVec[1]]
+                } else if (ratio < 0.5) {
+                let tilt_vec = [tilt*currentPerpDiffVec[0]/currentSize, tilt*currentPerpDiffVec[1]/currentSize]      
+                newPoint1 = newPoint1
+                newPoint2 = [newPoint2[0]+tilt_vec[0], newPoint2[1]+tilt_vec[1]]
+                } else if (ratio > 0.5) {
+                let tilt_vec = [tilt*currentDiffVec[0]/currentSize, tilt*currentDiffVec[1]/currentSize]      
+                newPoint1 = newPoint1
+                newPoint2 = [newPoint1[0]+currentPerpDiffVec[0]+tilt_vec[0], newPoint1[1]+currentPerpDiffVec[1]+tilt_vec[1]]
+                }
+    
+                if ((variation == 1 || variation == 2) && false) {
+                return
+                newPoint1 = [newPoint1[0] + currentDiffVec[0], newPoint1[1] + currentDiffVec[1]]
+                newPoint2 = [newPoint2[0] + currentDiffVec[0], newPoint2[1] + currentDiffVec[1]]
+    
+                let reflected_points = reflectSquareOnAxis(newPoint1, newPoint2, currentPerpDiffVec)
+                newPoint1 = reflected_points[0]
+                newPoint2 = reflected_points[1]
+                }
+                
+                return [newPoint1, newPoint2]
+            }
+    
+            let size = getInitState()
+            let point_1 = [width/2 - size/2, height/2 - size/2]
+            let point_2 = [width/2 + size/2, height/2 - size/2]
+            let color = cores[cores.length-1]
+            let corrected_ratio = ratio
+    
+            if (variation == 1 || variation == 2) {
+                corrected_ratio = 1 - ratio
+            }
+    
+            desenho.appendChild(getSquareSvg(point_1, point_2, color, false))
+    
+            for (let i = 0; i < N-1; i++) {
+                let color = cores[i % cores.length];
+                let points = iterate(point_1, point_2, corrected_ratio, variation)
+                point_1 = points[0]
+                point_2 = points[1]
+    
+                let reflectedPoint1 = point_1
+                let reflectedPoint2 = point_2
+                let reflection = false
+                if (variation == 1 || variation == 2) {
+                reflection = true
+                points = reflectSquareMiddle(point_1, point_2)
+                reflectedPoint1 = points[0]
+                reflectedPoint2 = points[1]
+                }
+                
+                desenho.appendChild(getSquareSvg(reflectedPoint1, reflectedPoint2, color, reflection));
+            }
+            document.getElementById("desenho").innerHTML += "";
+        }
+        desenhar()
+    </script>
+</html>
